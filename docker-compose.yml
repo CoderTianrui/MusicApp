@@ -1,0 +1,19 @@
+version: '3'  # version of docker Compose file
+
+services:
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"  # map the port to container's port
+    depends_on:
+      - db 
+
+  db:
+    image: postgres 
+    environment:
+      POSTGRES_DB: mydatabase
+      POSTGRES_USER: user 
+      POSTGRES_PASSWORD: password

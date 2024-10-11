@@ -1,0 +1,57 @@
+## frontend
+frontend/node_modules
+frontend/npm-debug.log*
+# Output
+frontend/.output
+frontend/.vercel
+frontend/.svelte-kit
+frontend/build
+
+# OS
+frontend/.DS_Store
+frontend/Thumbs.db
+
+# Env
+frontend/.env.*
+frontend/!.env.example
+frontend/!.env.test
+
+# Vite
+frontend/vite.config.js.timestamp-*
+frontend/vite.config.ts.timestamp-*
+
+## backend
+backend/env/
+backend/env.ps1
+backend/db.sqlite3
+backend/*.pyc
+backend/__pycache__/
+backend/venv/
+
+# Ignore Python cache files
+backend/**/__pycache__/
+backend/**/*.pyc
+backend/**/*.pyo
+
+# Ignore logs and temporary files
+*.log
+*.tmp
+
+# Ignore any IDE specific settings
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Media files
+*.mp3
+*.mp4
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Tailwind CSS and Vite
+**/.vite/
+**/dist/
+
