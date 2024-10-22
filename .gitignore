@@ -11,6 +11,7 @@ venv/
 **/*.pyc
 **/*.pyo
 
+
 # Ignore logs and temporary files
 *.log
 *.tmp
@@ -33,3 +34,6 @@ Thumbs.db
 **/.vite/
 **/dist/
 
+.venv
+myapp/__pycache__
+*.pyc
