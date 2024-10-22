@@ -1,37 +1,15 @@
-## frontend
-frontend/node_modules
-frontend/npm-debug.log*
-# Output
-frontend/.output
-frontend/.vercel
-frontend/.svelte-kit
-frontend/build
-
-# OS
-frontend/.DS_Store
-frontend/Thumbs.db
-
-# Env
-frontend/.env.*
-frontend/!.env.example
-frontend/!.env.test
-
-# Vite
-frontend/vite.config.js.timestamp-*
-frontend/vite.config.ts.timestamp-*
-
 ## backend
-backend/env/
-backend/env.ps1
-backend/db.sqlite3
-backend/*.pyc
-backend/__pycache__/
-backend/venv/
+env/
+env.ps1
+db.sqlite3
+*.pyc
+__pycache__/
+venv/
 
 # Ignore Python cache files
-backend/**/__pycache__/
-backend/**/*.pyc
-backend/**/*.pyo
+**/**/__pycache__/
+**/*.pyc
+**/*.pyo
 
 
 # Ignore logs and temporary files
