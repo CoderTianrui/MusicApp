@@ -5,7 +5,31 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth import login
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
-from .models import UserData, Playlist, Track, PlaylistTrack, SharedPlaylist, Album, Genre, Artist, TrackArtistJunction, TrackAlbumJunction, TrackGenreJunction, AlbumArtistJunction
+from .models import UserData
+from myapp.database import (
+    check_playlist_exists,
+    check_track_exists,
+    check_playlist_track_link_exists,
+    check_shared_playlist_exists,
+    check_album_exists,
+    check_genre_exists,
+    check_artist_exists,
+    check_track_artist_link_exists,
+    check_track_album_link_exists,
+    check_track_genre_exists,
+    check_album_artist_link_exists,
+    create_playlist,
+    create_track,
+    add_track_to_playlist,
+    share_playlist_to_user,
+    create_album,
+    create_genre,
+    create_artist,
+    create_track_artist_link,
+    create_track_album_link,
+    create_track_genre_link,
+    create_album_artist_link
+    )
 import json
 import re
 
@@ -76,7 +100,6 @@ def login_view(request):
 
 @csrf_protect 
 def register_view(request):
-    
     if request.method == "POST":
         body = json.loads(request.body)
         username = body.get('username')
@@ -169,7 +192,6 @@ def create_playlist(request):
 
             # Extract necessary fields from the request data
             title = data.get('title')
-            description = data.get('description', '')
 
             # Get the session ID from cookies to identify the user
             session_key = request.COOKIES.get('sessionid')
@@ -188,14 +210,11 @@ def create_playlist(request):
             # Retrieve the user from the UserData model
             user = UserData.objects.get(pk=user_id)
 
-            if Playlist.objects.filter(name=title).exists():
+            if check_playlist_exists(title):
                 return JsonResponse({"error": "Playlist already exists"}, status=400)
 
             # Create a new playlist and set the owner as the current user
-            playlist = Playlist.objects.create(
-                name=title,
-                owner=user
-            )
+            playlist = create_playlist(title, user)
 
             # Return a success response
             return JsonResponse({
@@ -243,18 +262,14 @@ def create_track(request):
             # Retrieve the user from the UserData model
             user = UserData.objects.get(pk=user_id)
 
-            if Track.objects.filter(title=title).exists():
+            if user.role != 0:
+                return JsonResponse({"error": "User does not have permission."}, status=403)
+
+            if check_track_exists(title):
                 return JsonResponse({"error": "Track already exists"}, status=400)
 
             # Create a new playlist and set the owner as the current user
-            track = Track.objects.create(
-                title=title,
-                duration=duration,
-                resource_link=resource_link,
-                release_date=release_date,
-                lyrics=lyrics,
-                owner=user
-            )
+            track = create_track(title, duration, resource_link, release_date, lyrics, user)
 
             # Return a success response
             return JsonResponse({
@@ -301,14 +316,11 @@ def add_track_to_playlist(request):
             # Retrieve the user from the UserData model
             user = UserData.objects.get(pk=user_id)
 
-            if PlaylistTrack.objects.filter(playlist_id=playlist_id, track_id=track_id).exists():
+            if check_playlist_track_link_exists(playlist_id, track_id):
                 return JsonResponse({"error": "Playlist-Track link already exists"}, status=400)
 
             # Create a new playlist and set the owner as the current user
-            playlistTrack = PlaylistTrack.objects.create(
-                playlist_id=playlist_id,
-                track_id=track_id,
-            )
+            playlistTrack = add_track_to_playlist(playlist_id, track_id)
 
             # Return a success response
             return JsonResponse({
@@ -352,14 +364,11 @@ def share_playlist(request):
             # Retrieve the user from the UserData model
             user = UserData.objects.get(pk=user_id)
 
-            if SharedPlaylist.objects.filter(playlist_id=playlist_id, user_id=user_id).exists():
+            if check_shared_playlist_exists(playlist_id, user_id):
                 return JsonResponse({"error": "Playlist-User link already exists"}, status=400)
 
             # Create a new playlist and set the owner as the current user
-            sharedPlaylist = SharedPlaylist.objects.create(
-                playlist_id=playlist_id,
-                user_id=user_id,
-            )
+            sharedPlaylist = share_playlist_to_user(playlist_id, user_id)
 
             # Return a success response
             return JsonResponse({
@@ -409,20 +418,14 @@ def make_album(request):
             # Retrieve the user from the UserData model
             user = UserData.objects.get(pk=user_id)
 
-            if Album.objects.filter(title=title).exists():
+            if user.role != 0:
+                return JsonResponse({"error": "User does not have permission."}, status=403)
+
+            if check_album_exists(title):
                 return JsonResponse({"error": "Album already exists"}, status=400)
 
             # Create a new playlist and set the owner as the current user
-            album = Album.objects.create(
-                artist_id=artist_id,
-                title=title,
-                release_date=release_date,
-                cover_img_url=cover_img_url,
-                label=label,
-                total_tracks=total_tracks,
-                description=description,
-                album_type=album_type
-            )
+            album = create_album(artist_id, title, release_date, cover_img_url, label, total_tracks, description, album_type)
 
             # Return a success response
             return JsonResponse({
@@ -467,15 +470,14 @@ def make_genre(request):
             # Retrieve the user from the UserData model
             user = UserData.objects.get(pk=user_id)
 
-            if Genre.objects.filter(name=name).exists():
+            if user.role != 0:
+                return JsonResponse({"error": "User does not have permission."}, status=403)
+
+            if check_genre_exists(name):
                 return JsonResponse({"error": "Genre already exists"}, status=400)
 
             # Create a new playlist and set the owner as the current user
-            genre = Genre.objects.create(
-                name=name,
-                description=description,
-                album_type=album_type
-            )
+            genre = create_genre(name, description, album_type)
 
             # Return a success response
             return JsonResponse({
@@ -521,16 +523,14 @@ def make_artist(request):
             # Retrieve the user from the UserData model
             user = UserData.objects.get(pk=user_id)
 
-            if Artist.objects.filter(name=name).exists():
+            if user.role != 0:
+                return JsonResponse({"error": "User does not have permission."}, status=403)
+
+            if check_artist_exists(name):
                 return JsonResponse({"error": "Artist already exists"}, status=400)
 
             # Create a new playlist and set the owner as the current user
-            genre = Artist.objects.create(
-                name=name,
-                bio=bio,
-                profile_img_link=profile_img_link,
-                debut_date=debut_date
-            )
+            genre = create_artist(name, bio, profile_img_link, debut_date)
 
             # Return a success response
             return JsonResponse({
@@ -574,14 +574,14 @@ def link_track_to_artist(request):
             # Retrieve the user from the UserData model
             user = UserData.objects.get(pk=user_id)
 
-            if TrackArtistJunction.objects.filter(artist_id=artist_id, track_id=track_id).exists():
+            if user.role != 0:
+                return JsonResponse({"error": "User does not have permission."}, status=403)
+
+            if check_track_artist_link_exists(artist_id, track_id):
                 return JsonResponse({"error": "Artist-Track link already exists"}, status=400)
 
             # Create a new playlist and set the owner as the current user
-            trackArtistJunction = TrackArtistJunction.objects.create(
-                artist_id=artist_id,
-                track_id=track_id,
-            )
+            trackArtistJunction = create_track_artist_link(artist_id, track_id)
 
             # Return a success response
             return JsonResponse({
@@ -625,14 +625,14 @@ def link_track_to_album(request):
             # Retrieve the user from the UserData model
             user = UserData.objects.get(pk=user_id)
 
-            if TrackAlbumJunction.objects.filter(album_id=album_id, track_id=track_id).exists():
+            if user.role != 0:
+                return JsonResponse({"error": "User does not have permission."}, status=403)
+
+            if check_track_album_link_exists(album_id, track_id):
                 return JsonResponse({"error": "Album-Track link already exists"}, status=400)
 
             # Create a new playlist and set the owner as the current user
-            trackAlbumJunction = TrackAlbumJunction.objects.create(
-                album_id=album_id,
-                track_id=track_id,
-            )
+            trackAlbumJunction = create_track_album_link(album_id, track_id)
 
             # Return a success response
             return JsonResponse({
@@ -676,14 +676,14 @@ def link_track_to_genre(request):
             # Retrieve the user from the UserData model
             user = UserData.objects.get(pk=user_id)
 
-            if TrackGenreJunction.objects.filter(genre_id=genre_id, track_id=track_id).exists():
+            if user.role != 0:
+                return JsonResponse({"error": "User does not have permission."}, status=403)
+
+            if check_track_genre_exists(genre_id, track_id):
                 return JsonResponse({"error": "Genre-Track link already exists"}, status=400)
 
             # Create a new playlist and set the owner as the current user
-            trackGenreJunction = TrackGenreJunction.objects.create(
-                genre_id=genre_id,
-                track_id=track_id,
-            )
+            trackGenreJunction = create_track_genre_link(genre_id, track_id)
 
             # Return a success response
             return JsonResponse({
@@ -727,15 +727,15 @@ def link_album_to_artist(request):
             # Retrieve the user from the UserData model
             user = UserData.objects.get(pk=user_id)
 
+            if user.role != 0:
+                return JsonResponse({"error": "User does not have permission."}, status=403)
+
             # Check if the album-artist link already exists
-            if AlbumArtistJunction.objects.filter(album_id=album_id, artist_id=artist_id).exists():
+            if check_album_artist_link_exists(album_id, artist_id):
                 return JsonResponse({"error": "Album-Artist link already exists"}, status=400)
 
             # Create a new album-artist link
-            albumArtistJunction = AlbumArtistJunction.objects.create(
-                album_id=album_id,
-                artist_id=artist_id,
-            )
+            albumArtistJunction = create_album_artist_link(album_id, artist_id)
 
             # Return a success response
             return JsonResponse({
@@ -750,3 +750,4 @@ def link_album_to_artist(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
+
