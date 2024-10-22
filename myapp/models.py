@@ -9,6 +9,7 @@ class UserData(models.Model):
     role = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)  # Creation time
     updated_at = models.DateTimeField(auto_now=True)      # Update time
+    last_login = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = 'UserData'  # Ensure it matches the database table name
@@ -27,6 +28,7 @@ class Playlist(models.Model):
     owner = models.ForeignKey(UserData, on_delete=models.CASCADE, null=True)  # Foreign key to UserData, nullable
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    name = models.CharField(max_length=255)
 
     class Meta:
         db_table = 'Playlist'

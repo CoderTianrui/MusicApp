@@ -6,7 +6,7 @@ In `backend`,
 pip install django djangorestframework django-cors-headers
 
 # run django server
-python3 manage.py runserver
+python manage.py runserver
 ```
 In `frontend`,
 
