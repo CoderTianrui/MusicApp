@@ -1,8 +1,0 @@
-{
-
-  response: {
-
-    data: { error: 'Username and password required' }
-  },
-  status: 400
-}
