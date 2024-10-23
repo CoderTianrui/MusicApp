@@ -121,7 +121,6 @@ class TrackAlbumJunction(models.Model):
     junction_id = models.AutoField(primary_key=True)
     track = models.ForeignKey(Track, on_delete=models.CASCADE, null=True)        # Foreign key to Track, nullable
     album = models.ForeignKey('Album', on_delete=models.CASCADE, null=True)      # Foreign key to Album, nullable
-    track_number = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -1,5 +1,5 @@
 from django.contrib.auth import authenticate, login, logout
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth import login
@@ -28,7 +28,8 @@ from myapp.database import (
     create_track_artist_link,
     create_track_album_link,
     create_track_genre_link,
-    create_album_artist_link
+    create_album_artist_link,
+    get_album
     )
 import json
 import re
@@ -751,3 +752,114 @@ def link_album_to_artist(request):
 
     return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
 
+@csrf_exempt
+def remove_album_track_link(request):
+    if request.method == "POST":
+        try:
+            # Get the JSON data from the request body
+            data = json.loads(request.body)
+
+            # Extract necessary fields from the request data
+            album_id = data.get('album_id')
+            artist_id = data.get('artist_id')
+
+            # Get the session ID from cookies to identify the user
+            session_key = request.COOKIES.get('sessionid')
+
+            if not session_key:
+                return JsonResponse({"error": "No session ID found in cookies"}, status=401)
+
+            # Get the session data to retrieve the user ID
+            session = Session.objects.get(session_key=session_key)
+            session_data = session.get_decoded()
+            user_id = session_data.get('_auth_user_id')
+
+            if not user_id:
+                return JsonResponse({"error": "User not authenticated"}, status=401)
+
+            # Retrieve the user from the UserData model
+            user = UserData.objects.get(pk=user_id)
+
+            if user.role != 0:
+                return JsonResponse({"error": "User does not have permission."}, status=403)
+
+            # Check if the album-artist link already exists
+            if check_album_artist_link_exists(album_id, artist_id):
+                return JsonResponse({"error": "Album-Artist link already exists"}, status=400)
+
+            # Create a new album-artist link
+            albumArtistJunction = create_album_artist_link(album_id, artist_id)
+
+            # Return a success response
+            return JsonResponse({
+                "message": "Album-Artist link created successfully",
+                "album_id": albumArtistJunction.album_id,
+                "artist_id": albumArtistJunction.artist_id,
+            }, status=201)
+
+        except (UserData.DoesNotExist, Session.DoesNotExist):
+            return JsonResponse({"error": "User or session not found"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
+
+@csrf_exempt
+def get_album_info(request):
+    if request.method == "POST":
+        try:
+            # Get the JSON data from the request body
+            data = json.loads(request.body)
+
+            # Extract necessary fields from the request data
+            album_name = data.get('album_name')
+
+            # Check if the album-artist link already exists
+            album_data = get_album(album_name)
+
+            if album_data.get("error"):
+                return JsonResponse({
+                    "message": "Album was not found",
+                }, status=201)
+
+            return JsonResponse({
+                "message": "Album was found successfully",
+                "album_data": album_data
+            }, status=201)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
+
+import os
+SONGS_DIR = os.path.join('../backend', 'database_storage', 'songs')
+@csrf_exempt
+def get_music(request):
+    if request.method == "POST":
+        try:
+            # Get the JSON data from the request body
+            data = json.loads(request.body)
+
+            # Extract necessary fields from the request data
+            music_name = data.get('music_name')
+
+            if not music_name:
+                return JsonResponse({"error": "No music name provided"}, status=400)
+
+            # Build the path to the music file
+            music_file_path = os.path.join(SONGS_DIR, music_name)
+
+            print(music_file_path)
+
+            # Check if the file exists
+            if not os.path.exists(music_file_path):
+                return JsonResponse({"error": "Music file not found"}, status=404)
+
+            # Return the file as a response (FileResponse handles streaming large files)
+            return FileResponse(open(music_file_path, 'rb'), content_type='audio/flac')
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Only POST requests are allowed"}, status=405)

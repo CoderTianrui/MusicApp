@@ -394,3 +394,44 @@ def remove_album_from_genre(album_id, genre_id):
         "message": f"Successfully removed album {album_id} from genre {genre_id}",
         "genre_album_deleted": genre_album_deleted
     }
+
+
+def get_album(title):
+    # Find the album by title
+    album = Album.objects.filter(title=title).first()
+
+    if not album:
+        return {"error": f"No album found with the title {title}"}
+
+    album_id = album.album_id
+    
+    # Find all tracks associated with the album by searching TrackAlbumJunction by album id
+    track_junctions = TrackAlbumJunction.objects.filter(album_id=album_id)
+    track_ids = [tj.track_id for tj in track_junctions]
+    tracks = Track.objects.filter(track_id__in=track_ids)
+    
+    # Find the artist associated with the album in AlbumArtistJunction by album id
+    album_artist_junction = AlbumArtistJunction.objects.filter(album_id=album_id).first()
+    if album_artist_junction:
+        artist = Artist.objects.filter(artist_id=album_artist_junction.artist_id).first()
+    else:
+        artist = None
+
+    # Compile the album, track, and artist data into a dictionary
+    album_data = {
+        "title": album.title,
+        "release_date": album.release_date,
+        "cover_img_url": album.cover_image_url,
+        "label": album.label,
+        "total_tracks": album.total_tracks,
+        "description": album.description,
+        "tracks": [{"title": track.title, "duration": track.duration, "resource_link": track.resource_link, "release_date": track.release_date, "lyrics": track.lyrics} for track in tracks],
+        "artist": {
+            "name": artist.name,
+            "bio": artist.bio,
+            "profile_img_link": artist.profile_image_url,
+            "debut_date": artist.debut_date
+        } if artist else None
+    }
+
+    return album_data
