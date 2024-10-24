@@ -182,7 +182,7 @@ def session_view(request):
                 try:
                     # Retrieve the user from the UserData model using the user_id
                     user = UserData.objects.get(pk=user_id)
-                    return JsonResponse({"user": user.email}, status=200)
+                    return JsonResponse({"user": user.email, "role": user.role}, status=200)
                 except UserData.DoesNotExist:
                     return JsonResponse({"error": "User not found"}, status=404)
 

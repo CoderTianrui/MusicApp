@@ -19,7 +19,8 @@ from myapp.views.create_object_views import (
 from myapp.views.data_request_views import (
     get_album_info,
     get_music,
-    search_songs
+    search_songs,
+    search_albums
 )
 
 from myapp.views.linking_views import (
@@ -51,5 +52,6 @@ urlpatterns = [
     path('link_album_to_artist/', link_album_to_artist, name='link_album_to_artist'),
     path('link_track_to_artist/', link_track_to_artist, name='link_track_to_artist'),
     path('link_track_to_genre/', link_track_to_genre, name='link_track_to_genre'),
-    path('search_songs/', search_songs, name='search_songs')
+    path('search_songs/', search_songs, name='search_songs'),
+    path('search_albums/', search_albums, name='search_albums')
 ]

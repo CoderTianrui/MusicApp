@@ -1,6 +1,6 @@
 from django.http import JsonResponse, FileResponse
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
-from myapp.models import Track
+from myapp.models import Track, Album
 from myapp.database import (
     get_album
     )
@@ -76,6 +76,7 @@ def get_music(request):
 
     return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
 
+@csrf_exempt
 def search_songs(request):
     query = request.GET.get('query', '')
     if query:
@@ -90,4 +91,22 @@ def search_songs(request):
             for index, song in enumerate(songs)
         ]
         return JsonResponse(song_list, safe=False)
+    return JsonResponse([], safe=False)
+
+@csrf_exempt
+def search_albums(request):
+    query = request.GET.get('query', '')
+    if query:
+        albums = Album.objects.filter(title__icontains=query)
+        album_list = [
+            {
+                'albumNumber': index + 1,
+                'title': album.title,
+                'release_date': album.release_date,
+                'label': album.label,
+                'description': album.description
+            }
+            for index, album in enumerate(albums)
+        ]
+        return JsonResponse(album_list, safe=False)
     return JsonResponse([], safe=False)
