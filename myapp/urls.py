@@ -12,7 +12,8 @@ from myapp.views.create_object_views import (
     create_playlist,
     add_track,
     add_album,
-    add_artist
+    add_artist,
+    add_genre
 )
 
 from myapp.views.data_request_views import (
@@ -44,4 +45,8 @@ urlpatterns = [
     path('add_track/', add_track, name='add_track'),
     path('add_album/', add_album, name='add_album'),
     path('add_artist/', add_artist, name='add_artist'),
+    path('add_genre/', add_genre, name='add_genre'),
+    path('link_track_to_album/', link_track_to_album, name='link_track_to_album'),
+    path('link_album_to_artist/', link_album_to_artist, name='link_album_to_artist'),
+    path('link_track_to_artist/', link_track_to_artist, name='link_track_to_artist'),
 ]

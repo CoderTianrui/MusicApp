@@ -302,3 +302,60 @@ def add_artist(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
+
+@csrf_protect
+def add_genre(request):
+    if request.method == "POST":
+        try:
+            # Ensure that we are handling a JSON submission
+            if not request.body:
+                return JsonResponse({"error": "Invalid JSON data"}, status=400)
+
+            # Parse the JSON body of the request
+            try:
+                data = json.loads(request.body)
+            except json.JSONDecodeError:
+                return JsonResponse({"error": "Invalid JSON format"}, status=400)
+
+            session_key = request.COOKIES.get('authSessionid')
+
+            if not session_key:
+                return JsonResponse({"error": "No session ID found in cookies"}, status=401)
+
+            # Get the session data to retrieve the user ID
+            session = Session.objects.get(session_key=session_key)
+            session_data = session.get_decoded()
+            user_id = session_data.get('_auth_user_id')
+
+            if not user_id:
+                return JsonResponse({"error": "User not authenticated"}, status=401)
+
+            # Retrieve the user from the UserData model
+            user = UserData.objects.get(pk=user_id)
+
+            if user.role != 0:
+                return JsonResponse({"error": "User does not have permission."}, status=403)
+
+
+            # Get form fields from the JSON data
+            name = data.get('name')
+            description = data.get('description')
+
+            # Validate required fields
+            if not all([name, description]):
+                return JsonResponse({"error": "Missing required fields"}, status=400)
+
+            # Check for duplicate artist name
+            if check_genre_exists(name):
+                return JsonResponse({"error": "An artist with this name already exists."}, status=400)
+
+            # Save the artist data to the database (replace this with your actual DB logic)
+            genre = create_genre(name, description)
+
+            # Return success response
+            return JsonResponse({"message": "Genre added successfully", "genre_id": genre.genre_id}, status=201)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Only POST requests are allowed"}, status=405)

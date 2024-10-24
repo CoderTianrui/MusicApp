@@ -8,6 +8,10 @@ def check_track_exists(title):
     result = Track.objects.filter(title=title).exists()
     return result
 
+def get_track_id(title):
+    result = Track.objects.filter(title=title).first().track_id
+    return result  # Will return the first match or None if no match
+
 def check_track_exists_by_resource_id(resource_link):
     result = Track.objects.filter(resource_link=resource_link).exists()
     return result
@@ -28,13 +32,25 @@ def check_album_exists(title):
     result = Album.objects.filter(title=title).exists()
     return result
 
+def get_album_id(title):
+    result = Album.objects.filter(title=title).first().album_id
+    return result  # Will return the first match or None if no match
+
 def check_genre_exists(name):
     result = Genre.objects.filter(name=name).exists()
     return result
 
+def get_album_id(name):
+    result = Genre.objects.filter(name=name).first().genre_id
+    return result  # Will return the first match or None if no match
+
 def check_artist_exists(name):
     result = Artist.objects.filter(name=name).exists()
     return result
+
+def get_artist_id(name):
+    result = Artist.objects.filter(name=name).first().artist_id
+    return result  # Will return the first match or None if no match
 
 def check_track_artist_link_exists(artist_id, track_id):
     result = TrackArtistJunction.objects.filter(artist_id=artist_id, track_id=track_id).exists()
@@ -94,11 +110,10 @@ def create_album(title, release_date, cover_img_url, label, total_tracks, descri
                 )
     return album
     
-def create_genre(name, description, album_type):
+def create_genre(name, description):
     genre = Genre.objects.create(
                     name=name,
-                    description=description,
-                    album_type=album_type
+                    description=description
                 )
     return genre
     
