@@ -6,6 +6,7 @@ from myapp.database import (
     )
 import json
 
+
 @csrf_exempt
 def get_album_info(request):
     if request.method == "POST":
@@ -42,10 +43,14 @@ import json
 from django.views.decorators.csrf import csrf_exempt
 
 # Get the absolute path to the directory containing views.py
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+SONGS_DIR = os.path.join(BASE_DIR, 'database_storage', 'songs')
 
-# Construct the absolute path to the songs directory
-SONGS_DIR = os.path.join(r'D:\projects\musicflow3\backend', 'database_storage', 'songs')
+print("BASE_DIR:", BASE_DIR)
+print("SONGS_DIR:", SONGS_DIR)
+
+
+
 @csrf_exempt
 def get_music(request):
     if request.method == "POST":
