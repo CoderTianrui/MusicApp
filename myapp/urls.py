@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (login_view, logout_view, session_view, get_csrf_token, register_view, create_playlist, create_track, add_track_to_playlist,
-                    share_playlist, make_album, make_genre, get_album_info, get_music
+                    share_playlist, make_album, make_genre, get_album_info, get_music, search_songs
                     )
 
 urlpatterns = [
@@ -17,4 +17,6 @@ urlpatterns = [
     path('make_genre/', make_genre, name='make_genre'),
     path('get_album/', get_album_info, name='get_album_info'),
     path('get_music/', get_music, name='get_music'),
+    path('search_songs/', search_songs, name='search_songs')
+
 ]

@@ -892,28 +892,48 @@ SONGS_DIR = os.path.join(BASE_DIR, '..', 'database_storage', 'songs')
 def get_music(request):
     if request.method == "POST":
         try:
-            # Get the JSON data from the request body
             data = json.loads(request.body)
-
-            # Extract necessary fields from the request data
+            print(f"Full request body: {data}")
             music_name = data.get('music_name')
+            print(f"Received music name: {music_name}")
 
             if not music_name:
                 return JsonResponse({"error": "No music name provided"}, status=400)
 
             # Build the path to the music file
             music_file_path = os.path.join(SONGS_DIR, music_name)
-
             print(music_file_path)
 
             # Check if the file exists
             if not os.path.exists(music_file_path):
                 return JsonResponse({"error": "Music file not found"}, status=404)
 
-            # Return the file as a response (FileResponse handles streaming large files)
             return FileResponse(open(music_file_path, 'rb'), content_type='audio/flac')
 
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
+
+
+
+from django.http import JsonResponse
+from .models import Track
+
+def search_songs(request):
+    query = request.GET.get('query', '')
+    if query:
+        songs = Track.objects.filter(title__icontains=query)  # 进行不区分大小写的模糊匹配
+        song_list = [
+            {
+                'trackNumber': index + 1,
+                'title': song.title,
+                'duration': song.duration
+            }
+            for index, song in enumerate(songs)
+        ]
+        return JsonResponse(song_list, safe=False)
+    return JsonResponse([], safe=False)
+
+
+
