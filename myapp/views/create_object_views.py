@@ -5,7 +5,7 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth import login
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
-from ..models import UserData
+from myapp.models import UserData
 from myapp.database import (
     check_playlist_exists,
     check_track_exists,
