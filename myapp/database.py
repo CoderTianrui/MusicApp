@@ -7,6 +7,14 @@ def check_playlist_exists(title):
 def check_track_exists(title):
     result = Track.objects.filter(title=title).exists()
     return result
+
+def get_track_id(title):
+    result = Track.objects.filter(title=title).first().track_id
+    return result  # Will return the first match or None if no match
+
+def check_track_exists_by_resource_id(resource_link):
+    result = Track.objects.filter(resource_link=resource_link).exists()
+    return result
     
 def check_playlist_track_link_exists(playlist_id, track_id):
     result = PlaylistTrack.objects.filter(playlist_id=playlist_id, track_id=track_id).exists()
@@ -16,17 +24,33 @@ def check_shared_playlist_exists(playlist_id, user_id):
     result = SharedPlaylist.objects.filter(playlist_id=playlist_id, user_id=user_id).exists()
     return result
 
+def check_album_exists_by_cover_img_url(cover_image_url):
+    result = Album.objects.filter(cover_image_url=cover_image_url).exists()
+    return result
+
 def check_album_exists(title):
     result = Album.objects.filter(title=title).exists()
     return result
+
+def get_album_id(title):
+    result = Album.objects.filter(title=title).first().album_id
+    return result  # Will return the first match or None if no match
 
 def check_genre_exists(name):
     result = Genre.objects.filter(name=name).exists()
     return result
 
+def get_album_id(name):
+    result = Genre.objects.filter(name=name).first().genre_id
+    return result  # Will return the first match or None if no match
+
 def check_artist_exists(name):
     result = Artist.objects.filter(name=name).exists()
     return result
+
+def get_artist_id(name):
+    result = Artist.objects.filter(name=name).first().artist_id
+    return result  # Will return the first match or None if no match
 
 def check_track_artist_link_exists(artist_id, track_id):
     result = TrackArtistJunction.objects.filter(artist_id=artist_id, track_id=track_id).exists()
@@ -44,7 +68,6 @@ def check_album_artist_link_exists(album_id, artist_id):
     result = AlbumArtistJunction.objects.filter(album_id=album_id, artist_id=artist_id).exists()
     return result
 
-
 def create_playlist(title, user):
     playlist = Playlist.objects.create(
                 name=title,
@@ -52,14 +75,13 @@ def create_playlist(title, user):
             )
     return playlist
 
-def create_track(title, duration, resource_link, release_date, lyrics, user):
+def create_track_database(title, duration, resource_link, release_date, lyrics):
     track = Track.objects.create(
                     title=title,
                     duration=duration,
                     resource_link=resource_link,
                     release_date=release_date,
                     lyrics=lyrics,
-                    owner=user
                 )
     return track
 
@@ -77,24 +99,21 @@ def share_playlist_to_user(playlist_id, user_id):
                 )
     return sharedPlaylist
     
-def create_album(artist_id, title, release_date, cover_img_url, label, total_tracks, description, album_type):
+def create_album(title, release_date, cover_img_url, label, total_tracks, description):
     album = Album.objects.create(
-                    artist_id=artist_id,
                     title=title,
                     release_date=release_date,
-                    cover_img_url=cover_img_url,
+                    cover_image_url=cover_img_url,
                     label=label,
                     total_tracks=total_tracks,
-                    description=description,
-                    album_type=album_type
+                    description=description
                 )
     return album
     
-def create_genre(name, description, album_type):
+def create_genre(name, description):
     genre = Genre.objects.create(
                     name=name,
-                    description=description,
-                    album_type=album_type
+                    description=description
                 )
     return genre
     
@@ -102,7 +121,7 @@ def create_artist(name, bio, profile_img_link, debut_date):
     artist = Artist.objects.create(
                     name=name,
                     bio=bio,
-                    profile_img_link=profile_img_link,
+                    profile_image_url=profile_img_link,
                     debut_date=debut_date
                 )
     return artist
