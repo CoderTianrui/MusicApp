@@ -49,4 +49,5 @@ urlpatterns = [
     path('link_track_to_album/', link_track_to_album, name='link_track_to_album'),
     path('link_album_to_artist/', link_album_to_artist, name='link_album_to_artist'),
     path('link_track_to_artist/', link_track_to_artist, name='link_track_to_artist'),
+    path('link_track_to_genre/', link_track_to_genre, name='link_track_to_genre'),
 ]

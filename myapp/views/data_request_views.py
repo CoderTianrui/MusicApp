@@ -45,7 +45,7 @@ from django.views.decorators.csrf import csrf_exempt
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Construct the absolute path to the songs directory
-SONGS_DIR = os.path.join(BASE_DIR, '..', 'database_storage', 'songs')
+SONGS_DIR = os.path.join(r'D:\projects\musicflow3\backend', 'database_storage', 'songs')
 @csrf_exempt
 def get_music(request):
     if request.method == "POST":
