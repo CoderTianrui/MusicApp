@@ -79,12 +79,13 @@ def get_music(request):
 def search_songs(request):
     query = request.GET.get('query', '')
     if query:
-        songs = Track.objects.filter(title__icontains=query)  # 进行不区分大小写的模糊匹配
+        songs = Track.objects.filter(title__icontains=query)
         song_list = [
             {
                 'trackNumber': index + 1,
                 'title': song.title,
-                'duration': song.duration
+                'duration': song.duration,
+                'url': song.resource_link
             }
             for index, song in enumerate(songs)
         ]
