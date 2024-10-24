@@ -832,8 +832,18 @@ def get_album_info(request):
 
     return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
 
+# import os
+# SONGS_DIR = os.path.join('../backend', 'database_storage', 'songs')
 import os
-SONGS_DIR = os.path.join('../backend', 'database_storage', 'songs')
+from django.http import JsonResponse, FileResponse
+import json
+from django.views.decorators.csrf import csrf_exempt
+
+# Get the absolute path to the directory containing views.py
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Construct the absolute path to the songs directory
+SONGS_DIR = os.path.join(BASE_DIR, '..', 'database_storage', 'songs')
 @csrf_exempt
 def get_music(request):
     if request.method == "POST":
