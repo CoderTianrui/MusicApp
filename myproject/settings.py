@@ -54,11 +54,11 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Add your SvelteKit frontend URL here
-    "http://localhost:5174",
+    "http://localhost:5175",
     "http://50.17.52.44"
 ]
 
-CSRF_TRUSTED_ORIGINS = ['http://localhost:5173', "http://localhost:5174",]
+CSRF_TRUSTED_ORIGINS = ['http://localhost:5173', "http://localhost:5175",]
 
 # Configure session settings (optional tweaks)
 CSRF_USE_SESSIONS = True

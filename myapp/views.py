@@ -37,6 +37,13 @@ import re
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.cache import cache
+from datetime import timedelta
+import pyotp
+import base64
+import qrcode
+from io import BytesIO
+from django.core.files.base import ContentFile
 
 @csrf_protect
 def login_view(request):
@@ -44,6 +51,16 @@ def login_view(request):
         body = json.loads(request.body)
         username = body.get('username')
         password = body.get('password')
+        mfa_code = body.get('mfa_code')
+        ip_address = request.META.get('REMOTE_ADDR')  # Get the user's IP address
+
+        # Rate limit key (based on IP address and username)
+        rate_limit_key = f"login_attempts_{username}_{ip_address}"
+
+        # Check if the user has exceeded the allowed attempts
+        attempts = cache.get(rate_limit_key, 0)
+        if attempts >= 5:
+            return JsonResponse({"error": "Too many failed login attempts. Please try again in 10 minutes."}, status=429)
 
         # Check if the username and password are provided
         if not username or not password:
@@ -55,8 +72,15 @@ def login_view(request):
 
             # Check if the password matches using Django's password hashing system
             if check_password(password, user.password):
+
+                totp = pyotp.TOTP(user.mfa_secret)
+                if not totp.verify(mfa_code):
+                    return JsonResponse({"error": "Invalid MFA code"}, status=400)
                 # Use Django's login function to log in the user
                 login(request, user)
+
+                # Reset the failed attempts after a successful login
+                cache.delete(rate_limit_key)
 
                 # Retrieve the session ID (session token)
                 session_token = request.session.session_key
@@ -92,14 +116,20 @@ def login_view(request):
 
                 return response
             else:
+                # Increment failed login attempts
+                attempts += 1
+                cache.set(rate_limit_key, attempts, timeout=600)  # Set a 10-minute lockout after 5 failed attempts
                 return JsonResponse({"error": "Invalid credentials"}, status=400)
-        
+
         except UserData.DoesNotExist:
+            # Increment failed login attempts
+            attempts += 1
+            cache.set(rate_limit_key, attempts, timeout=600)  # Set a 10-minute lockout after 5 failed attempts
             return JsonResponse({"error": "Invalid credentials"}, status=400)
-    
+
     return JsonResponse({"error": "Only POST method allowed"}, status=405)
 
-@csrf_protect 
+@csrf_protect
 def register_view(request):
     if request.method == "POST":
         body = json.loads(request.body)
@@ -108,36 +138,50 @@ def register_view(request):
         name = body.get('name')
         display_name = body.get('displayname')
 
-        # 1. Check if username is in email format
-        email_regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
-        if not re.match(email_regex, username):
-            return JsonResponse({"error": "usernameNotEmail"}, status=400)
-
-        # 3. Check if name is provided
-        if not name:
-            return JsonResponse({"error": "nameNotGiven"}, status=400)
-
-        # 2. Check if username (email) already exists in the UserData model
+        # Other registration checks...
         if UserData.objects.filter(email=username).exists():
-            return JsonResponse({"error": "existingUsername"}, status=400)
+            return JsonResponse({"error": "Username already exists"}, status=400)
 
-        # 4. Hash the password
+        # Hash the password
+
+        password_regex = r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{10,}$'
+        if not re.match(password_regex, password):
+            return JsonResponse({"error": "invalidPassword"}, status=400)
+        
         hashed_password = make_password(password)
 
-        # 5. If displayname is not provided, use name as displayname
+        # Generate a new MFA secret for the user
+        mfa_secret = pyotp.random_base32()
+
+        # If displayname is not provided, use name as displayname
         if not display_name:
             display_name = name
 
-        # 6. Save username (email), name, and displayname to the UserData model
+        # Save username (email), name, displayname, and MFA secret to the UserData model
         new_user = UserData.objects.create(
-            email=username,        # 6. Save username to email
-            password=hashed_password,  # 4. Save the hashed password
-            name=name,             # 7. Save name to name
-            display_name=display_name, # Save displayname (name if displayname not provided)
-            role=1                 # 8. Set role to 1
+            email=username,
+            password=hashed_password,
+            name=name,
+            display_name=display_name,
+            role=1,
+            mfa_secret=mfa_secret  # Save the MFA secret
         )
 
-        return JsonResponse({"message": "User registered successfully"}, status=201)
+        # Generate a QR code for the user to scan in the authenticator app
+        totp_uri = pyotp.totp.TOTP(mfa_secret).provisioning_uri(username, issuer_name="MusicFlow")
+        img = qrcode.make(totp_uri)
+
+        # Convert the QR code image to a base64 string to include in the response
+        buffer = BytesIO()
+        img.save(buffer, format="PNG")
+        buffer.seek(0)
+        qr_code_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+
+        # Return the QR code as a base64 string along with the success message
+        return JsonResponse({
+            "message": "User registered successfully",
+            "qr_code": f"data:image/png;base64,{qr_code_base64}"
+        }, status=201)
 
     return JsonResponse({"error": "Only POST method allowed"}, status=405)
 

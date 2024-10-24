@@ -1,18 +1,19 @@
 from django.db import models
 
 class UserData(models.Model):
-    user_id = models.AutoField(primary_key=True)  # Primary key
+    user_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
-    email = models.CharField(max_length=255)
-    password = models.CharField(max_length=255)  # Should be securely stored
+    email = models.CharField(max_length=255, unique=True)  # Enforce uniqueness
+    password = models.CharField(max_length=255)
     display_name = models.CharField(max_length=255)
     role = models.IntegerField()
-    created_at = models.DateTimeField(auto_now_add=True)  # Creation time
-    updated_at = models.DateTimeField(auto_now=True)      # Update time
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     last_login = models.DateTimeField(null=True, blank=True)
+    mfa_secret = models.CharField(max_length=32, null=True, blank=True)
 
     class Meta:
-        db_table = 'UserData'  # Ensure it matches the database table name
+        db_table = 'UserData'
 
 class ActivityLog(models.Model):
     log_id = models.AutoField(primary_key=True)
@@ -28,7 +29,7 @@ class Playlist(models.Model):
     owner = models.ForeignKey(UserData, on_delete=models.CASCADE, null=True)  # Foreign key to UserData, nullable
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, null=True)
 
     class Meta:
         db_table = 'Playlist'
