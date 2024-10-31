@@ -23,9 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-6c+@fze@l%i)86w4=g)iq7f&&htq%rab#*fm_qmhi4sptyv$&l'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '50.17.52.44', '172.31.38.213', '50.17.50.48']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '50.17.52.44', '172.31.38.213', '50.17.50.48', '44.221.15.214', 'enastudio.com']
 
 # Application definition
 
@@ -55,14 +55,18 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Add your SvelteKit frontend URL here
     "http://localhost:5175",
-    "http://50.17.52.44"
+    "http://50.17.52.44",
+    'https://enastudio.com',
+    'http://enastudio.com',
 ]
 
-CSRF_TRUSTED_ORIGINS = ['http://localhost:5173', "http://localhost:5175",]
+CSRF_TRUSTED_ORIGINS = ['http://localhost:5173', "http://localhost:5175", 'https://enastudio.com', 'http://enastudio.com', 'https://enastudio.com']
 
 # Configure session settings (optional tweaks)
 CSRF_USE_SESSIONS = True
-# SESSION_COOKIE_HTTPONLY = True
+
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 
 ROOT_URLCONF = 'myproject.urls'
 
@@ -92,8 +96,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'masterrdspassword',
+        'USER': 'readonly_user',
+        'PASSWORD': 'securepassword',
         'HOST': 'rds-database.czb9uxpwysnx.us-east-1.rds.amazonaws.com',
         'PORT': '5432'
     }

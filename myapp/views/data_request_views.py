@@ -1,5 +1,6 @@
 from django.http import JsonResponse, FileResponse
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
+from django.http import HttpResponseRedirect
 from myapp.models import Track, Album
 from myapp.database import (
     get_album
@@ -48,9 +49,7 @@ SONGS_DIR = os.path.join(BASE_DIR, 'database_storage', 'songs')
 
 print("BASE_DIR:", BASE_DIR)
 print("SONGS_DIR:", SONGS_DIR)
-
-
-
+from django.http import HttpResponse, JsonResponse
 @csrf_exempt
 def get_music(request):
     if request.method == "POST":
@@ -67,14 +66,15 @@ def get_music(request):
             # Build the path to the music file
             music_file_path = os.path.join(SONGS_DIR, music_name)
 
-            print(music_file_path)
-
             # Check if the file exists
             if not os.path.exists(music_file_path):
                 return JsonResponse({"error": "Music file not found"}, status=404)
 
-            # Return the file as a response (FileResponse handles streaming large files)
-            return FileResponse(open(music_file_path, 'rb'), content_type='audio/flac')
+            # Use X-Accel-Redirect header to serve the file via Nginx
+            response = HttpResponse()
+            response['X-Accel-Redirect'] = f"/protected_songs/{music_name}"
+            response['Content-Type'] = 'audio/flac'  # Adjust the content type as needed
+            return response
 
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)

@@ -71,7 +71,7 @@ def login_view(request):
                     key='sessionid', 
                     value=session_token, 
                     httponly=True,  # Ensure that the session cookie is HTTP only
-                    secure=False,  # Change to True if you're using HTTPS
+                    secure=True,  # Change to True if you're using HTTPS
                     samesite='Lax'  # Adjust the SameSite attribute as needed
                 )
 
@@ -80,7 +80,7 @@ def login_view(request):
                     key='csrftoken', 
                     value=csrf_token, 
                     httponly=False,  # Allow JavaScript access if needed
-                    secure=False,  # Change to True if you're using HTTPS
+                    secure=True,  # Change to True if you're using HTTPS
                     samesite='Lax'  # Adjust the SameSite attribute as needed
                 )
 
